@@ -269,6 +269,9 @@ class AddKeywordPlan
         return $planAdGroupResource;
     }
 
+
+    //https://www.php.net/manual/en/function.fgetcsv.php
+
     /**
      * Creates ad group keywords for the keyword plan.
      *
@@ -282,30 +285,34 @@ class AddKeywordPlan
         int $customerId,
         string $planAdGroupResource
     ) {
-        // Creates the ad group keywords for the keyword plan.
-        $keywordPlanAdGroupKeyword1 = new KeywordPlanAdGroupKeyword([
-            'text' => 'mars cruise',
-            'cpc_bid_micros' => 2000000,
-            'match_type' => KeywordMatchType::BROAD,
-            'keyword_plan_ad_group' => $planAdGroupResource
-        ]);
 
-        $keywordPlanAdGroupKeyword2 = new KeywordPlanAdGroupKeyword([
-            'text' => 'cheap cruise',
-            'cpc_bid_micros' => 15000000,
-            'match_type' => KeywordMatchType::PHRASE,
-            'keyword_plan_ad_group' => $planAdGroupResource
-        ]);
+        $keywordPlanAdGroupKeywords = [];
+        $headerRow = true;
 
-        $keywordPlanAdGroupKeyword3 = new KeywordPlanAdGroupKeyword([
-            'text' => 'jupiter cruise',
-            'cpc_bid_micros' => 1990000,
-            'match_type' => KeywordMatchType::EXACT,
-            'keyword_plan_ad_group' => $planAdGroupResource
-        ]);
+        if (($handle = fopen("keywords.csv", "r")) !== FALSE) {
+            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
 
-        $keywordPlanAdGroupKeywords =
-            [$keywordPlanAdGroupKeyword1, $keywordPlanAdGroupKeyword2, $keywordPlanAdGroupKeyword3];
+                if($headerRow){ // Skip header row 1.
+                    $headerRow = false;
+                    continue;
+                }
+
+                $num = count($data);
+
+                echo "<p> $num fields in line $row: <br /></p>\n";
+
+                $keyword = new KeywordPlanAdGroupKeyword([
+                    'text' => $data[0],
+                    'cpc_bid_micros' => $data[1],
+                    'match_type' => KeywordMatchType::BROAD,
+                    'keyword_plan_ad_group' => $planAdGroupResource
+                ]);
+
+                array_push(keywordPlanAdGroupKeywords, $keyword);
+            }
+            fclose($handle);
+        }
+
 
         // Creates an array of keyword plan ad group keyword operations.
         $keywordPlanAdGroupKeywordOperations = [];
